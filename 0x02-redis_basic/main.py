@@ -5,6 +5,8 @@ Main file
 
 import redis
 from exercise import Cache, replay
+from web import get_page
+import time
 
 # Task 0: Store a value in Redis
 cache = Cache()
@@ -56,3 +58,10 @@ cache.store("bar")
 cache.store(42)
 replay(cache.store)
 
+
+url = "http://slowwly.robertomurray.co.uk/delay/2000/url/http://example.com"
+
+print(get_page(url))  # First call: fetches from web (2s delay)
+print(get_page(url))  # Second call: cached (immediate)
+time.sleep(10)
+print(get_page(url))  # After TTL: fetch again (2s delay)
