@@ -50,7 +50,9 @@ print("inputs: {}".format(inputs))
 print("outputs: {}".format(outputs))
 
 # Task 4: Replay the method call history
+cache = Cache()
 cache.store("foo")
 cache.store("bar")
 cache.store(42)
 replay(cache.store)
+
