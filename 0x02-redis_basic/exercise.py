@@ -23,36 +23,35 @@ def count_calls(method: Callable) -> Callable:
 
 
 def call_history(method: Callable) -> Callable:
-    """
-    Decorator that stores the history of inputs and outputs for a method.
-    Inputs are stored in '<method_name>:inputs'
-    Outputs are stored in '<method_name>:outputs'
-    """
+    """Store the history of inputs and outputs for a function in Redis."""
     @wraps(method)
     def wrapper(self, *args, **kwargs):
-        input_key = f"{method.__qualname__}:inputs"
-        output_key = f"{method.__qualname__}:outputs"
-        self._redis.rpush(input_key, str(args))
-        output = method(self, *args, **kwargs)
-        self._redis.rpush(output_key, str(output))
-        return output
+        input_data = str(args)
+        method_name = method.__qualname__
+        inputs_key = f"{method_name}:inputs"
+        outputs_key = f"{method_name}:outputs"
+
+        self._redis.rpush(inputs_key, input_data)
+        result = method(self, *args, **kwargs)
+        self._redis.rpush(outputs_key, result)
+
+        return result
     return wrapper
 
 
-def replay(method: Callable) -> None:
-    """
-    Display the history of calls of a particular function.
-    """
-    redis = method.__self__._redis
-    key = method.__qualname__
+def replay(method: Callable):
+    """Display the history of calls of a particular function."""
+    r = redis.Redis()
+    method_name = method.__qualname__
+    inputs_key = f"{method_name}:inputs"
+    outputs_key = f"{method_name}:outputs"
 
-    inputs = redis.lrange(f"{key}:inputs", 0, -1)
-    outputs = redis.lrange(f"{key}:outputs", 0, -1)
-    calls = redis.get(key)
+    input_list = r.lrange(inputs_key, 0, -1)
+    output_list = r.lrange(outputs_key, 0, -1)
 
-    print(f"{key} was called {int(calls)} times:")
-    for inp, out in zip(inputs, outputs):
-        print(f"{key}(*{inp.decode('utf-8')}) -> {out.decode('utf-8')}")
+    print(f"{method_name} was called {len(input_list)} times:")
+    for inp, out in zip(input_list, output_list):
+        print(f"{method_name}(*{inp.decode('utf-8')}) -> {out.decode('utf-8')}")
 
 
 class Cache:
