@@ -46,11 +46,11 @@ def replay(method: Callable):
     inputs_key = f"{method_name}:inputs"
     outputs_key = f"{method_name}:outputs"
 
-    input_list = r.lrange(inputs_key, 0, -1)
-    output_list = r.lrange(outputs_key, 0, -1)
+    inputs = r.lrange(inputs_key, 0, -1)
+    outputs = r.lrange(outputs_key, 0, -1)
 
-    print(f"{method_name} was called {len(input_list)} times:")
-    for inp, out in zip(input_list, output_list):
+    print(f"{method_name} was called {len(inputs)} times:")
+    for inp, out in zip(inputs, outputs):
         print(f"{method_name}(*{inp.decode('utf-8')}) -> {out.decode('utf-8')}")
 
 
